@@ -60,3 +60,11 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
+
+# Installed official runtime; never commit upstream package contents.
+runtime/node_modules/
+.runtime-test/
+.artifacts/
+.DS_Store
+.env
+*.xcuserstate

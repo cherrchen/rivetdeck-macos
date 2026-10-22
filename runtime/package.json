@@ -1,0 +1,24 @@
+{
+  "name": "rivetdeck-native-runtime",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "verify": "node scripts/verify.mjs",
+    "probe:web": "node scripts/web-probe.mjs"
+  },
+  "dependencies": {
+    "@deepseek-ai/dsh": "0.2.1-rc.2"
+  },
+  "allowScripts": {
+    "@deepseek-ai/dsh-subprocess-local@0.2.1-rc.2": true,
+    "koffi@3.1.1": true,
+    "node-pty@1.2.0-beta.15": true,
+    "protobufjs@7.6.6": true,
+    "@google/genai": false
+  },
+  "packageManager": "npm@11.16.0"
+}

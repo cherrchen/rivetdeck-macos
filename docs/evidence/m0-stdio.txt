@@ -1,0 +1,48 @@
+initialize: {
+    serverInfo =     {
+        name = "deepseek-harness-sdk-runtime";
+        version = "0.0.1";
+    };
+}
+notification session.event permission/preset
+notification session.event sandbox/mode
+notification session.event approval/policy
+session/working-directory/get: {
+    cwd = "/Volumes/\U897f\U65702T/Chen/deepseek-harness/rivetdeck-macos";
+}
+session/working-directory/set: {
+    cwd = "/Volumes/\U897f\U65702T/Chen/deepseek-harness/rivetdeck-macos";
+}
+notification session.event permission/preset
+notification session.event sandbox/mode
+notification session.event approval/policy
+session/working-directory/get: {
+    cwd = "/Volumes/\U897f\U65702T/Chen/deepseek-harness/rivetdeck-macos";
+}
+notification session.event agent/inbox/spliced
+notification session.status running
+notification session.event turn/start
+notification session.event agent/inbox/spliced
+session/prompt: {
+    messageId = "4e6bc6e2-fbb9-4b1a-885d-dec2bfdaecc8";
+}
+notification session.event step/start
+notification session.event system/message
+notification session.event user/message
+notification session.event user/message
+notification session.event request/header
+notification session.event request/context
+notification session.event session/title
+notification session.event assistant/attempt
+notification session.event step/end
+notification session.event turn/end
+notification session.status idle
+session/wait: {
+}
+session/cancel: error {
+    code = "-32603";
+    message = "unknown DeepSeek Harness SDK runtime method: session/cancel";
+}
+shutdown: {
+}
+exit=0, notifications=21, session=native-poc-c33c229c-c7b1-4292-aa96-6693c8a283bc

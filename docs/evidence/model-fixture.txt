@@ -1,0 +1,40 @@
+Runtime: Connecting…
+Session ID: native-d4f3cda4-f8d6-4f05-bb2b-4e9399cb4a47
+Runtime: Connected
+Event: permission/preset
+Event: sandbox/mode
+Event: approval/policy
+Workspace: /var/folders/31/m13kcsfx08lg3ld8kc5gh8cm0000gn/T/rivetdeck-model-fixture-JxOeWs
+Event: agent/inbox/spliced
+Agent: running
+Event: turn/start
+Event: agent/inbox/spliced
+Durable receipt: 95b2f55e-dc03-4907-8b11-4a027d1c1a0f
+Event: step/start
+Event: system/message
+Message user: Reply with a short greeting.
+Message context: Current runtime context. This snapshot supersedes earlier runtime-context snapshots.
+
+Current working directory: "/var/folders/31/m13kcsfx08lg3ld8kc5gh8cm0000gn/T/rivetdeck-model-fixture-JxOeWs".
+
+Current DSH file policy: workspace-write. Any available operation enforced by the DSH file sandbox may modify files under the session workspace: "/var/folders/31/m13kcsfx08lg3ld8kc5gh8cm0000gn/T/rivetdeck-model-fixture-JxOeWs". Some platform temporary areas may also be writable.
+
+Approval policy: ask. Operations that require approval may ask through the configured answerers; without an available answerer, the request fails closed.
+Event: request/header
+Event: request/context
+Event: session/title
+Event: session-log-deepseek/delivery-accepted
+Message assistant: [tool-call]
+Event: Tool: working_directory
+Message tool: /var/folders/31/m13kcsfx08lg3ld8kc5gh8cm0000gn/T/rivetdeck-model-fixture-JxOeWs
+Event: step/end
+Event: step/start
+Event: session-log-deepseek/delivery-accepted
+Message assistant: RIVETDECK_FIXTURE_OK
+Event: step/end
+Event: Turn ended: completed
+Agent: idle
+Runtime: Stopped
+Resumed the same persisted session (history replay is not exposed by SDK)
+PASS: handshake, session, prompt, events, shutdown, restart, resume. Model output: deterministic TEST fixture. Events: 25
+PASS: official DSH + Swift + local TEST model fixture: real tool call, result, assistant event. No paid API.

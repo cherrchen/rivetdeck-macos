@@ -1,0 +1,34 @@
+Test Suite 'All tests' started at 2026-10-22 22:57:08.080.
+Test Suite 'RivetdeckNativePackageTests.xctest' started at 2026-10-22 22:57:08.081.
+Test Suite 'LifecycleTests' started at 2026-10-22 22:57:08.081.
+Test Case '-[RivetdeckCoreTests.LifecycleTests testHandshakeTimeoutAndMalformedStdout]' started.
+Test Case '-[RivetdeckCoreTests.LifecycleTests testHandshakeTimeoutAndMalformedStdout]' passed (0.346 seconds).
+Test Case '-[RivetdeckCoreTests.LifecycleTests testLifecycleAndSessionIsolation]' started.
+Test Case '-[RivetdeckCoreTests.LifecycleTests testLifecycleAndSessionIsolation]' passed (0.196 seconds).
+Test Case '-[RivetdeckCoreTests.LifecycleTests testRealRuntimeWithoutPaidModel]' started.
+Test Case '-[RivetdeckCoreTests.LifecycleTests testRealRuntimeWithoutPaidModel]' passed (4.393 seconds).
+Test Case '-[RivetdeckCoreTests.LifecycleTests testSessionEventRoutingAndOrder]' started.
+Test Case '-[RivetdeckCoreTests.LifecycleTests testSessionEventRoutingAndOrder]' passed (0.111 seconds).
+Test Case '-[RivetdeckCoreTests.LifecycleTests testSessionIDValidationAndErrorRedaction]' started.
+Test Case '-[RivetdeckCoreTests.LifecycleTests testSessionIDValidationAndErrorRedaction]' passed (0.100 seconds).
+Test Case '-[RivetdeckCoreTests.LifecycleTests testSupervisorForcesTerminationWhenSIGTERMIgnored]' started.
+Test Case '-[RivetdeckCoreTests.LifecycleTests testSupervisorForcesTerminationWhenSIGTERMIgnored]' passed (2.214 seconds).
+Test Case '-[RivetdeckCoreTests.LifecycleTests testUnexpectedExitAndDisconnectRejectPendingPrompt]' started.
+Test Case '-[RivetdeckCoreTests.LifecycleTests testUnexpectedExitAndDisconnectRejectPendingPrompt]' passed (0.151 seconds).
+Test Suite 'LifecycleTests' passed at 2026-10-22 22:57:15.592.
+Test Suite 'ProtocolTests' started at 2026-10-22 22:57:15.592.
+Test Case '-[RivetdeckCoreTests.ProtocolTests testEnvironmentDoesNotInheritPolicyOrAmbientSecrets]' started.
+Test Case '-[RivetdeckCoreTests.ProtocolTests testEnvironmentDoesNotInheritPolicyOrAmbientSecrets]' passed (0.002 seconds).
+Test Case '-[RivetdeckCoreTests.ProtocolTests testFramingLimitsAndTruncatedEOF]' started.
+Test Case '-[RivetdeckCoreTests.ProtocolTests testFramingLimitsAndTruncatedEOF]' passed (0.000 seconds).
+Test Case '-[RivetdeckCoreTests.ProtocolTests testMessageToolFailureAndUnknownEventProjection]' started.
+Test Case '-[RivetdeckCoreTests.ProtocolTests testMessageToolFailureAndUnknownEventProjection]' passed (0.001 seconds).
+Test Case '-[RivetdeckCoreTests.ProtocolTests testResponseAndRPCError]' started.
+Test Case '-[RivetdeckCoreTests.ProtocolTests testResponseAndRPCError]' passed (0.000 seconds).
+Test Case '-[RivetdeckCoreTests.ProtocolTests testSplitUTF8AndMultipleFrames]' started.
+Test Case '-[RivetdeckCoreTests.ProtocolTests testSplitUTF8AndMultipleFrames]' passed (0.000 seconds).
+Test Suite 'ProtocolTests' passed at 2026-10-22 22:57:15.595.
+Test Suite 'RivetdeckNativePackageTests.xctest' passed at 2026-10-22 22:57:15.595.
+	 Executed 12 tests, with 0 failures (0 unexpected) in 7.513 (7.514) seconds
+Test Suite 'All tests' passed at 2026-10-22 22:57:15.595.
+	 Executed 12 tests, with 0 failures (0 unexpected) in 7.513 (7.515) seconds

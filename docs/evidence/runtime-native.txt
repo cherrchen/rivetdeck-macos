@@ -1,0 +1,9 @@
+
+> rivetdeck-native-runtime@0.1.0 verify
+> node scripts/verify.mjs
+
+@deepseek-ai/dsh@0.2.1-rc.2
+@deepseek-ai/dsh-sdk-protocol@0.2.1-rc.2
+@deepseek-ai/dsh-sdk-jsonrpc-server@0.2.1-rc.2
+@deepseek-ai/dsh-sdk-app@0.2.1-rc.2
+PASS: official package closure, koffi load, native PTY spawn/exit. No model API called.

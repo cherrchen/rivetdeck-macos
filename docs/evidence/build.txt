@@ -1,0 +1,4 @@
+Xcode 16.4 / Swift 6.1.2 / macOS 15.8 arm64
+Final xcodebuild Debug: BUILD SUCCEEDED (arm64 and x86_64 Swift executable).
+Final staged developer App: bundled ARM64 Node 24.18.0, official DSH 0.2.1-rc.2 production closure.
+Final codesign --verify --deep --strict: exit 0. Developer ad-hoc signature only; not notarized.

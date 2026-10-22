@@ -1,0 +1,27 @@
+Runtime: Connecting…
+Session ID: native-0c4644a2-8e4a-4be0-8f81-f093929a2199
+Runtime: Connected
+Event: permission/preset
+Event: sandbox/mode
+Event: approval/policy
+Workspace: /Volumes/西数2T/Chen/deepseek-harness/rivetdeck-macos
+Event: agent/inbox/spliced
+Agent: running
+Event: turn/start
+Event: agent/inbox/spliced
+Durable receipt: 9fea07b3-67fa-46d2-9646-c49dcadd0dd9
+Event: step/start
+Event: system/message
+Message user: [content withheld]
+Message user: [content withheld]
+Message user: [content withheld]
+Event: request/header
+Event: request/context
+Event: session/title
+Event: assistant/attempt
+Event: step/end
+Agent failed (MISSING_CREDENTIAL). Check DSH configuration and credentials.
+Agent: idle
+Runtime: Stopped
+Resumed the same persisted session (history replay is not exposed by SDK)
+PASS: handshake, session, prompt, events, shutdown, restart, resume. Model output: not requested with credentials. Events: 19

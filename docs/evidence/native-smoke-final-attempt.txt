@@ -1,0 +1,4 @@
+scripts/app-smoke.sh: line 37: 80492 Terminated: 15          "$app/Contents/MacOS/RivetdeckNative" --smoke-test "$result" "$node_binary" "$runtime_root" "$probe_root/dsh" "$probe_root" quit
+Traceback (most recent call last):
+  File "<stdin>", line 2, in <module>
+FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/31/m13kcsfx08lg3ld8kc5gh8cm0000gn/T//rivetdeck-app-smoke.kMQn4X/result.json'

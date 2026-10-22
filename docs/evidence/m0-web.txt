@@ -1,0 +1,8 @@
+Unauthenticated list HTTP 401
+Launch token exchange HTTP 302, signed cookie received (redacted)
+Authenticated list HTTP 200 {"type":"server-response","rpcId":"probe-list","result":{"ok":true,"value":{"items":[]}}}
+Cross-origin list HTTP 403
+Swift URLSession: authenticated session/list succeeded
+WebSocket first frame: type=item, valueType=ready, errorCode=none
+Swift URLSession WebSocket: $events ready received
+Web Host stopped

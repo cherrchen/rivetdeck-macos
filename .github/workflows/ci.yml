@@ -1,0 +1,32 @@
+name: macOS
+on:
+  push:
+  pull_request:
+jobs:
+  native:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.18.0'
+          cache: npm
+          cache-dependency-path: runtime/package-lock.json
+      - name: Pin npm
+        run: npm install --global npm@11.16.0
+      - name: Install locked official runtime
+        run: npm ci --prefix runtime --no-audit --no-fund
+      - name: Native dependency verification
+        run: npm --prefix runtime run verify
+      - name: Swift unit and real-runtime tests (no paid model)
+        run: |
+          export RIVETDECK_INTEGRATION_NODE="$(node -p 'process.execPath')"
+          export RIVETDECK_RUNTIME_ROOT="$PWD/runtime"
+          scripts/swift-check.sh
+      - name: Deterministic model fixture with real DSH
+        run: node Tests/Integration/model-fixture.mjs /tmp/rivetdeck-native-build/debug/dsh-probe
+      - name: Web Host API feasibility probe
+        run: node runtime/scripts/web-probe.mjs
+      - name: Build native app
+        run: scripts/build-app.sh
+      # Requires a logged-in WindowServer. Run app-smoke.sh locally; no fake headless UI pass.

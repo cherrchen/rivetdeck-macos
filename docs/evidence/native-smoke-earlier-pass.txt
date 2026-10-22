@@ -1,0 +1,16 @@
+{
+  "credentialsSupplied": false,
+  "handshake": true,
+  "liveRowCount": 16,
+  "missingCredentialRendered": true,
+  "mock": false,
+  "modelAnswerVerified": false,
+  "nativeWindowCount": 1,
+  "receipt": "69fbd49d-a1a0-470d-8d90-a57b9a6129ae",
+  "session": "smoke-5a7bc4b3-e797-4367-8c61-9a16665da999"
+}
+scripts/app-smoke.sh: line 39: 72089 Terminated: 15          ( sleep 55; if [[ -f "$result.pid" ]]; then
+    read -r native_pid < "$result.pid" || true; if [[ "${native_pid:-}" =~ ^[0-9]+$ ]]; then
+        kill "$native_pid" 2> /dev/null || true;
+    fi;
+fi; kill "$launcher_pid" 2> /dev/null || true )
