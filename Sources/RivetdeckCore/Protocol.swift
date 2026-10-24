@@ -86,10 +86,28 @@ public enum RuntimeState: Sendable, Equatable {
         }
     }
 }
+public enum Activity: Sendable, Equatable {
+    case toolCall(name: String)
+    case turnEnded(reason: String)
+    case subagentStarted(id: String)
+    case subagentFinished(status: String)
+    case approval(type: String)
+    case other(type: String)
+    public var summary: String {
+        switch self {
+        case .toolCall(let name): "Tool: \(name)"
+        case .turnEnded(let reason): "Turn ended: \(reason)"
+        case .subagentStarted(let id): "Subagent started: \(id)"
+        case .subagentFinished(let status): "Subagent finished: \(status)"
+        case .approval(let type): "\(type) — SDK cannot answer approval requests"
+        case .other(let type): type
+        }
+    }
+}
 public enum SessionUpdate: Sendable, Equatable {
     case status(String)
     case message(id: String, role: String, text: String)
-    case activity(String)
+    case activity(Activity)
     case failure(String)
 }
 public enum DSHEvent: Sendable, Equatable {
@@ -107,10 +125,10 @@ public struct EventDecoder: Sendable {
             return .session(id: id, sequence: nil, update: .status(status))
         }
         if method == "subagent.started", let parent = params["parentSessionId"].string {
-            return .session(id: parent, sequence: nil, update: .activity("Subagent started: \(params["childSessionId"].string ?? "unknown")"))
+            return .session(id: parent, sequence: nil, update: .activity(.subagentStarted(id: params["childSessionId"].string ?? "unknown")))
         }
         if method == "subagent.finished", let parent = params["parentSessionId"].string {
-            return .session(id: parent, sequence: nil, update: .activity("Subagent finished: \(params["status"].string ?? "unknown")"))
+            return .session(id: parent, sequence: nil, update: .activity(.subagentFinished(status: params["status"].string ?? "unknown")))
         }
         guard method == "session.event" else { return nil }
         let event = params["event"], data = event["data"]
@@ -127,15 +145,15 @@ public struct EventDecoder: Sendable {
                 block["text"].string ?? (block["type"].string.map { "[\($0)]" })
             }.joined(separator: "\n")
             update = .message(id: message["id"].string ?? "event-\(sequence)", role: role, text: String(text.prefix(32768)) + (text.count > 32768 ? "\n[Message truncated in this live view]" : ""))
-        case "tool/call": update = .activity("Tool: \(data["name"].string ?? "unknown")")
+        case "tool/call": update = .activity(.toolCall(name: data["name"].string ?? "unknown"))
         case "turn/end":
             let reason = data["reason"]
             if reason["kind"].string == "error" {
                 // Do not echo arbitrary provider response bodies, headers, or credentials.
                 update = .failure("Agent failed (\(reason["error"]["code"].string ?? "UNKNOWN")). Check DSH configuration and credentials.")
-            } else { update = .activity("Turn ended: \(reason["kind"].string ?? "unknown")") }
-        case "approval/request", "approval/decision": update = .activity("\(type) — SDK cannot answer approval requests")
-        default: update = .activity(type)
+            } else { update = .activity(.turnEnded(reason: reason["kind"].string ?? "unknown")) }
+        case "approval/request", "approval/decision": update = .activity(.approval(type: type))
+        default: update = .activity(.other(type: type))
         }
         return .session(id: id, sequence: sequence, update: update)
     }

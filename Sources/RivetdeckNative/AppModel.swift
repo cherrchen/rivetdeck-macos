@@ -15,29 +15,71 @@ import RivetdeckCore
 }
 
 struct ConversationEntry: Identifiable {
+    enum Kind { case user, assistant, context, activity, tool, error }
     let id: String
-    var role: String
+    var kind: Kind
+    var label: String
     var text: String
+    var activity: Activity?
+    let timestamp: Date
 }
 struct NativeSession: Identifiable {
     let id: String
     var title: String
+    var titleIsCustom = false
     var workspace: String
     var status = "idle"
+    var runningSince: Date?
+    var hasPrompted = false
+    var createdAt = Date()
     var entries: [ConversationEntry] = []
     var evicted = false
+}
+enum InspectorTab: Int { case session, diagnostics }
+enum AppearancePreference: String, CaseIterable, Identifiable {
+    case system, light, dark
+    var id: String { rawValue }
+    var title: String { rawValue.capitalized }
+    var scheme: ColorScheme? {
+        switch self {
+        case .system: nil
+        case .light: .light
+        case .dark: .dark
+        }
+    }
+}
+enum ContentTextSize: String, CaseIterable, Identifiable {
+    case small, standard, large
+    var id: String { rawValue }
+    var title: String { rawValue == "standard" ? "Default" : rawValue.capitalized }
+    var points: CGFloat {
+        switch self {
+        case .small: 13
+        case .standard: 14
+        case .large: 16
+        }
+    }
 }
 
 @MainActor @Observable final class AppModel {
     static let shared = AppModel()
     var runtimeState: RuntimeState = .stopped
+    var runtimeVersion: String?
     var sessions: [NativeSession] = []
     var selection: String?
+    var sessionQuery = ""
     var error: String?
     var busy = false
     var prompt = ""
     var resumeID = ""
     var showingResume = false
+    var renamingID: String?
+    var renameText = ""
+    var inspectorVisible: Bool { didSet { UIPreferences.store.set(inspectorVisible, forKey: "inspectorVisible") } }
+    var inspectorTab: InspectorTab = .session
+    var appearance: AppearancePreference { didSet { UIPreferences.store.set(appearance.rawValue, forKey: "appearance") } }
+    var contentTextSize: ContentTextSize { didSet { UIPreferences.store.set(contentTextSize.rawValue, forKey: "contentTextSize") } }
+    var autoCollapseWork: Bool { didSet { UIPreferences.store.set(autoCollapseWork, forKey: "autoCollapseWork") } }
     var workspaces: [String]
     var workspace: String { didSet { UIPreferences.store.set(workspace, forKey: "workspace") } }
     var nodePath: String { didSet { UIPreferences.store.set(nodePath, forKey: "node") } }
@@ -56,6 +98,11 @@ struct NativeSession: Identifiable {
     var connected: Bool { if case .connected = runtimeState { true } else { false } }
     var selected: NativeSession? { sessions.first { $0.id == selection } }
     var activeCount: Int { sessions.filter { $0.status == "running" }.count }
+    var visibleSessions: [NativeSession] {
+        let query = sessionQuery.trimmingCharacters(in: .whitespaces)
+        guard !query.isEmpty else { return sessions }
+        return sessions.filter { $0.title.localizedCaseInsensitiveContains(query) || $0.id.localizedCaseInsensitiveContains(query) }
+    }
 
     private init() {
         let defaults = UIPreferences.store, environment = ProcessInfo.processInfo.environment
@@ -72,6 +119,10 @@ struct NativeSession: Identifiable {
         homePath = defaults.string(forKey: "home") ?? RuntimeConfiguration.defaultHome.path
         provider = defaults.string(forKey: "provider") ?? "deepseek-official"
         model = defaults.string(forKey: "model") ?? "deepseek-flash"
+        inspectorVisible = defaults.object(forKey: "inspectorVisible") == nil ? true : defaults.bool(forKey: "inspectorVisible")
+        appearance = AppearancePreference(rawValue: defaults.string(forKey: "appearance") ?? "") ?? .system
+        contentTextSize = ContentTextSize(rawValue: defaults.string(forKey: "contentTextSize") ?? "") ?? .standard
+        autoCollapseWork = defaults.object(forKey: "autoCollapseWork") == nil ? true : defaults.bool(forKey: "autoCollapseWork")
     }
     func observe() {
         guard observation == nil else { return }
@@ -86,6 +137,7 @@ struct NativeSession: Identifiable {
         switch event {
         case .connection(let state):
             runtimeState = state; log("Runtime: \(state.label)")
+            if case .connected(let version) = state { runtimeVersion = version }
             if case .failed(let message) = state { error = message }
             if case .stopped = state { markInterrupted() }
             if case .failed = state { markInterrupted() }
@@ -95,14 +147,20 @@ struct NativeSession: Identifiable {
             }
             guard let index = sessions.firstIndex(where: { $0.id == id }) else { updateActivity(); return }
             switch update {
-            case .status(let status): sessions[index].status = status
+            case .status(let status):
+                sessions[index].status = status
+                sessions[index].runningSince = status == "running" ? Date() : nil
             case .message(let messageID, let role, let text):
+                let kind: ConversationEntry.Kind = role == "user" ? .user : (role == "context" ? .context : (role == "tool" ? .tool : .assistant))
+                let label = role == "tool" ? "Tool result" : role.capitalized
                 if let existing = sessions[index].entries.firstIndex(where: { $0.id == messageID }) {
-                    sessions[index].entries[existing] = ConversationEntry(id: messageID, role: role, text: text)
-                } else { append(index, role: role, text: text, id: messageID) }
-            case .activity(let text): append(index, role: "activity", text: text)
+                    sessions[index].entries[existing].kind = kind
+                    sessions[index].entries[existing].text = text
+                } else { append(index, kind: kind, label: label, text: text, id: messageID) }
+            case .activity(let activity):
+                append(index, kind: .activity, label: "Activity", text: activity.summary, id: UUID().uuidString, activity: activity)
             case .failure(let text):
-                append(index, role: "error", text: text); error = text
+                append(index, kind: .error, label: "Agent Error", text: text); error = text
                 smokeFailureWaiter?.resume(); smokeFailureWaiter = nil
             }
         }
@@ -121,16 +179,21 @@ struct NativeSession: Identifiable {
     }
     private func markInterrupted() {
         runningIDs.removeAll()
-        for index in sessions.indices where sessions[index].status == "running" { sessions[index].status = "interrupted" }
+        for index in sessions.indices where sessions[index].status == "running" {
+            sessions[index].status = "interrupted"; sessions[index].runningSince = nil
+        }
     }
-    private func append(_ index: Int, role: String, text: String, id: String = UUID().uuidString) {
-        sessions[index].entries.append(ConversationEntry(id: id, role: role, text: text))
+    private func append(_ index: Int, kind: ConversationEntry.Kind, label: String, text: String, id: String = UUID().uuidString, activity: Activity? = nil) {
+        sessions[index].entries.append(ConversationEntry(id: id, kind: kind, label: label, text: text, activity: activity, timestamp: Date()))
         if sessions[index].entries.count > 200 {
             sessions[index].entries.removeFirst(sessions[index].entries.count - 200)
             sessions[index].evicted = true
         }
     }
-    private func log(_ text: String) { logs.append(text); if logs.count > 100 { logs.removeFirst(logs.count - 100) } }
+    private func log(_ text: String) {
+        logs.append("\(Date().formatted(date: .omitted, time: .standard)) \(text)")
+        if logs.count > 100 { logs.removeFirst(logs.count - 100) }
+    }
     func configuration(key: String?) -> RuntimeConfiguration {
         RuntimeConfiguration(node: URL(fileURLWithPath: nodePath), runtimeRoot: URL(fileURLWithPath: runtimePath), home: URL(fileURLWithPath: homePath), workspace: URL(fileURLWithPath: workspace), provider: provider, model: model, credential: key)
     }
@@ -173,13 +236,48 @@ struct NativeSession: Identifiable {
             selection = id; showingResume = false; resumeID = ""
         } catch { sessions.removeAll { $0.id == id }; self.error = error.localizedDescription }
     }
+    /// Removes the UI row only. The SDK cannot dispose individual sessions; DSH retains its own log.
+    func removeFromList(_ id: String) {
+        sessions.removeAll { $0.id == id }
+        if selection == id { selection = sessions.first?.id }
+    }
+    func beginRename(_ id: String) {
+        renamingID = id
+        renameText = sessions.first { $0.id == id }?.title ?? ""
+    }
+    func commitRename() {
+        guard let id = renamingID, let index = sessions.firstIndex(where: { $0.id == id }) else { return }
+        let title = renameText.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !title.isEmpty { sessions[index].title = title; sessions[index].titleIsCustom = true }
+        renamingID = nil
+    }
+    func cancelRename() { renamingID = nil }
+    func copyToPasteboard(_ text: String) {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+    }
+    func revealWorkspaceInFinder() {
+        guard !workspace.isEmpty else { return }
+        NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: workspace)])
+    }
+    func openRecent(_ path: String) {
+        guard !connected, !busy else { return }
+        workspace = path
+        workspaces.removeAll { $0 == path }; workspaces.insert(path, at: 0)
+        workspaces = Array(workspaces.prefix(12)); UIPreferences.store.set(workspaces, forKey: "recentWorkspaces")
+    }
+    func clearRecents() {
+        workspaces = []
+        UIPreferences.store.set(workspaces, forKey: "recentWorkspaces")
+    }
     func send() async {
         guard let id = selection, !prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, !busy else { return }
         let text = prompt; prompt = ""; busy = true
+        if let index = sessions.firstIndex(where: { $0.id == id }) { sessions[index].hasPrompted = true }
         defer { busy = false }
         do {
             _ = try await client.prompt(sessionID: id, text: text)
-            if let index = sessions.firstIndex(where: { $0.id == id }), sessions[index].title == "New Session" {
+            if let index = sessions.firstIndex(where: { $0.id == id }), !sessions[index].titleIsCustom, sessions[index].title == "New Session" {
                 sessions[index].title = String(text.prefix(44))
             }
         } catch { prompt = text; self.error = error.localizedDescription }

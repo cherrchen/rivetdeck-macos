@@ -1,5 +1,8 @@
 import AppKit
 import SwiftUI
+#if SWIFT_PACKAGE
+import RivetdeckCore
+#endif
 
 @MainActor final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -26,7 +29,7 @@ import SwiftUI
     var body: some Scene {
         Window("Rivetdeck Native", id: "main") {
             MainWindow(model: model)
-                .frame(minWidth: 860, minHeight: 580)
+                .frame(minWidth: 960, minHeight: 600)
                 .onAppear {
                     #if DEBUG
                     let args = CommandLine.arguments
@@ -34,14 +37,48 @@ import SwiftUI
                     #endif
                 }
         }
-        .defaultSize(width: 1120, height: 760)
+        .defaultSize(width: 1160, height: 760)
         .commands {
             CommandGroup(replacing: .newItem) {
-                Button("New Session") { Task { await model.newSession() } }.keyboardShortcut("n").disabled(!model.connected)
-                Button("Open Workspace…") { model.chooseWorkspace() }.keyboardShortcut("o").disabled(model.connected || model.busy)
-                Button("Resume Session by ID…") { model.showingResume = true }.disabled(!model.connected)
+                Button("New Session") { Task { await model.newSession() } }
+                    .keyboardShortcut("n")
+                    .disabled(!model.connected)
+                Button("Open Workspace…") { model.chooseWorkspace() }
+                    .keyboardShortcut("o")
+                    .disabled(model.connected || model.busy)
+                Menu("Open Recent") {
+                    ForEach(model.workspaces, id: \.self) { path in
+                        Button(URL(fileURLWithPath: path).lastPathComponent) { model.openRecent(path) }
+                    }
+                    if !model.workspaces.isEmpty { Divider() }
+                    Button("Clear Menu") { model.clearRecents() }
+                        .disabled(model.workspaces.isEmpty)
+                }
+                .disabled(model.connected || model.busy || model.workspaces.isEmpty)
+                Divider()
+                Button("Resume Session by ID…") { model.showingResume = true }
+                    .disabled(!model.connected)
+            }
+            CommandGroup(after: .sidebar) {
+                Button(model.inspectorVisible ? "Hide Inspector" : "Show Inspector") {
+                    model.inspectorVisible.toggle()
+                }
+                .keyboardShortcut("i", modifiers: [.option, .command])
+            }
+            CommandMenu("Runtime") {
+                Button(model.connected ? "Disconnect Runtime" : "Connect Runtime") {
+                    Task { if model.connected { await model.shutdown() } else { await model.connect() } }
+                }
+                .disabled(model.busy || (!model.connected && model.workspace.isEmpty))
+                Button("Runtime Diagnostics") {
+                    model.inspectorTab = .diagnostics; model.inspectorVisible = true
+                }
             }
         }
-        Settings { RuntimeSettings(model: model) }
+        Settings {
+            SettingsView(model: model)
+                .tint(Tokens.Color.brand)
+                .preferredColorScheme(model.appearance.scheme)
+        }
     }
 }

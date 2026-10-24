@@ -34,7 +34,7 @@ In the app:
 1. Choose **Open Workspace…** (Cmd+O). First run requires an explicit directory selection.
 2. Open **Settings…** (Cmd+,). Check Node executable and the `runtime` directory. Default DSH home is `~/Library/Application Support/Rivetdeck Native/DSH`, independent from CLI/Electron. Do not select an actively used Electron/CLI home.
 3. Set the provider/model route if needed; defaults are `deepseek-official` / `deepseek-flash`. Store your own DeepSeek key using **Save to Keychain**, or configure credentials in this isolated DSH home using upstream-supported tools. The app does not automatically inherit shell API keys. The model ID must be supported by your provider configuration.
-4. Click **Connect Runtime**. Connected means the actual SDK handshake succeeded. Send a prompt with Cmd+Return and inspect real DSH messages, tool activity and structured turn errors.
+4. Click **Connect** in the sidebar footer or hero card. Connected means the actual SDK handshake succeeded. Send a prompt with Cmd+Return (Return inserts a newline) and inspect real DSH messages, folded per-turn tool steps and structured turn errors.
 
 A missing key still permits handshake/session testing and produces a real `MISSING_CREDENTIAL` turn error. A prompt receipt or successful `session/wait` alone does not mean the model answered. Use File → Resume Session by ID to reopen a known DSH session; copy IDs from a sidebar context menu. SDK resume does not replay old messages.
 
@@ -84,7 +84,7 @@ Both build modes use the same launch/handshake code. Bundled startup never insta
 
 ## Diagnostics and architecture
 
-Click the runtime info button for bounded connection metadata and errors. Raw stderr is drained without displaying arbitrary plugin output or secrets; exit status and byte counts are reported. Structured model errors appear in the conversation. Upstream startup diagnostics, when produced, live in this app's DSH home; review them privately. There is no automatic crash-restart or prompt resubmission.
+Toggle the right-hand inspector (⌥⌘I) for session metadata and bounded connection logs; the Runtime menu's Diagnostics item opens it directly. Raw stderr is drained without displaying arbitrary plugin output or secrets; exit status and byte counts are reported. Structured model errors appear in the conversation. Upstream startup diagnostics, when produced, live in this app's DSH home; review them privately. There is no automatic crash-restart or prompt resubmission.
 
 - [Upstream integration and A/B/C comparison](docs/upstream-integration.md)
 - [Architecture, ownership, concurrency, security and M3 plan](docs/architecture.md)

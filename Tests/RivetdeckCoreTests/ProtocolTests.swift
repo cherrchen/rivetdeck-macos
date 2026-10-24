@@ -29,9 +29,11 @@ final class ProtocolTests: XCTestCase {
         let decoder = EventDecoder()
         let samples: [(String, String, SessionUpdate)] = [
             ("assistant/message", "{\"message\":{\"id\":\"m\",\"role\":\"assistant\",\"content\":[{\"type\":\"text\",\"text\":\"hello\"}]}}", .message(id: "m", role: "assistant", text: "hello")),
-            ("tool/call", "{\"name\":\"bash\"}", .activity("Tool: bash")),
+            ("tool/call", "{\"name\":\"bash\"}", .activity(.toolCall(name: "bash"))),
             ("turn/end", "{\"reason\":{\"kind\":\"error\",\"error\":{\"code\":\"MISSING_CREDENTIAL\",\"message\":\"secret\"}}}", .failure("Agent failed (MISSING_CREDENTIAL). Check DSH configuration and credentials.")),
-            ("new-plugin/event", "{}", .activity("new-plugin/event"))
+            ("turn/end", "{\"reason\":{\"kind\":\"stop\"}}", .activity(.turnEnded(reason: "stop"))),
+            ("approval/request", "{}", .activity(.approval(type: "approval/request"))),
+            ("new-plugin/event", "{}", .activity(.other(type: "new-plugin/event")))
         ]
         for (type, data, update) in samples {
             let input = Data("{\"sessionId\":\"a\",\"event\":{\"type\":\"\(type)\",\"seq\":1,\"data\":\(data)}}".utf8)
@@ -39,6 +41,23 @@ final class ProtocolTests: XCTestCase {
             XCTAssertEqual(try decoder.decode(method: "session.event", params: params), .session(id: "a", sequence: 1, update: update))
         }
         XCTAssertThrowsError(try decoder.decode(method: "session.status", params: .object([:])))
+    }
+    func testActivitySummariesMatchLegacyStrings() throws {
+        let decoder = EventDecoder()
+        XCTAssertEqual(Activity.toolCall(name: "bash").summary, "Tool: bash")
+        XCTAssertEqual(Activity.turnEnded(reason: "stop").summary, "Turn ended: stop")
+        XCTAssertEqual(Activity.approval(type: "approval/request").summary, "approval/request — SDK cannot answer approval requests")
+        XCTAssertEqual(Activity.other(type: "new-plugin/event").summary, "new-plugin/event")
+        let started = try decoder.decode(method: "subagent.started", params: .object(["parentSessionId": .string("p"), "childSessionId": .string("c")]))
+        XCTAssertEqual(started, .session(id: "p", sequence: nil, update: .activity(.subagentStarted(id: "c"))))
+        if case .session(_, _, .activity(let activity)) = started {
+            XCTAssertEqual(activity.summary, "Subagent started: c")
+        }
+        let finished = try decoder.decode(method: "subagent.finished", params: .object(["parentSessionId": .string("p"), "status": .string("ok")]))
+        XCTAssertEqual(finished, .session(id: "p", sequence: nil, update: .activity(.subagentFinished(status: "ok"))))
+        if case .session(_, _, .activity(let activity)) = finished {
+            XCTAssertEqual(activity.summary, "Subagent finished: ok")
+        }
     }
     func testEnvironmentDoesNotInheritPolicyOrAmbientSecrets() {
         let config = RuntimeConfiguration(node: URL(fileURLWithPath: "/usr/bin/true"), runtimeRoot: URL(fileURLWithPath: "/tmp"), home: URL(fileURLWithPath: "/tmp/isolated"), workspace: URL(fileURLWithPath: "/tmp"))

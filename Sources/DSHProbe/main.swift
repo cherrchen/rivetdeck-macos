@@ -26,7 +26,7 @@ import RivetdeckCore
                         switch update {
                         case .failure(let message): print(message); missingCredential = message.contains("MISSING_CREDENTIAL")
                         case .message(_, let role, let text): print("Message \(role): \((live || fixture) ? text : "[content withheld]")")
-                        case .activity(let description): print("Event: \(description)")
+                        case .activity(let activity): print("Event: \(activity.summary)")
                         case .status(let status): print("Agent: \(status)")
                         }
                     }
